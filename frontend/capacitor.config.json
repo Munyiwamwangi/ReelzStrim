@@ -1,0 +1,32 @@
+{
+  "appId": "com.pulsepad.app",
+  "appName": "PulsePad",
+  "webDir": "dist",
+  "server": {
+    "androidScheme": "https",
+    "cleartext": true,
+    "allowNavigation": [
+      "localhost",
+      "10.0.2.2",
+      "192.168.100.241",
+      "*.pulsepad.com"
+    ]
+  },
+  "android": {
+    "allowMixedContent": true,
+    "captureInput": true,
+    "webContentsDebuggingEnabled": true
+  },
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 2000,
+      "backgroundColor": "#0f0f23",
+      "androidSplashResourceName": "splash",
+      "androidScaleType": "CENTER_CROP"
+    },
+    "StatusBar": {
+      "style": "DARK",
+      "backgroundColor": "#0f0f23"
+    }
+  }
+}
