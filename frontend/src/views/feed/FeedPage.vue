@@ -45,14 +45,17 @@
           <!-- Video Player (on top if available) -->
           <video
             v-if="hasVideoSrc(drama)"
-            ref="videoPlayer"
+            :ref="el => videoPlayer = index === currentIndex ? el : null"
             class="absolute inset-0 w-full h-full object-cover"
             :src="drama.video_url || drama.trailer_url"
+            :poster="drama.poster_url"
             loop
             playsinline
+            muted
             @click="togglePlay"
             @play="videoPlaying = true"
             @pause="videoPlaying = false"
+            @loadeddata="onVideoLoaded"
           />
 
           <!-- Gradient Overlay -->
