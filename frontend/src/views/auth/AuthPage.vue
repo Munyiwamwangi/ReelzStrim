@@ -13,15 +13,15 @@
         </div>
 
         <div class="auth-form glass">
-          <div class="flex mb-6">
+          <div class="flex mb-8 bg-white/5 rounded-2xl p-1.5">
             <button
-              :class="['flex-1 py-3 text-center font-semibold transition-all rounded-xl', isLogin ? 'gradient-bg text-white' : 'text-gray-400']"
+              :class="['flex-1 py-3.5 text-center font-bold transition-all duration-300 rounded-xl text-sm tracking-wide', isLogin ? 'gradient-bg text-white shadow-lg shadow-purple-500/30' : 'text-gray-400 hover:text-white']"
               @click="isLogin = true"
             >
               Sign In
             </button>
             <button
-              :class="['flex-1 py-3 text-center font-semibold transition-all rounded-xl', !isLogin ? 'gradient-bg text-white' : 'text-gray-400']"
+              :class="['flex-1 py-3.5 text-center font-bold transition-all duration-300 rounded-xl text-sm tracking-wide', !isLogin ? 'gradient-bg text-white shadow-lg shadow-purple-500/30' : 'text-gray-400 hover:text-white']"
               @click="isLogin = false"
             >
               Sign Up
