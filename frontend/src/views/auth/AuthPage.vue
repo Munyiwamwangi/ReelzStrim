@@ -7,7 +7,7 @@
             <div class="logo-icon">
               <ion-icon :icon="filmOutline" />
             </div>
-            <h1 class="gradient-text text-4xl font-bold">DramaWave</h1>
+            <h1 class="gradient-text text-4xl font-bold">RStream</h1>
           </div>
           <p class="text-gray-400 mt-2">Your ultimate drama streaming experience</p>
         </div>

@@ -1,6 +1,6 @@
 {
-  "appId": "com.pulsepad.app",
-  "appName": "PulsePad",
+  "appId": "com.rstream.app",
+  "appName": "RStream",
   "webDir": "dist",
   "server": {
     "androidScheme": "https",
@@ -9,7 +9,7 @@
       "localhost",
       "10.0.2.2",
       "192.168.100.241",
-      "*.pulsepad.com"
+      "*.rstream.app"
     ]
   },
   "android": {

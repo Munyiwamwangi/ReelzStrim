@@ -3,7 +3,7 @@
     <ion-header class="ion-no-border">
       <ion-toolbar>
         <ion-title class="text-center">
-          <span class="gradient-text text-xl font-bold">DramaWave</span>
+          <span class="gradient-text text-xl font-bold">RStream</span>
         </ion-title>
       </ion-toolbar>
     </ion-header>
