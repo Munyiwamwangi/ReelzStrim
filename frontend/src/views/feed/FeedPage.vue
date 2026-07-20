@@ -9,10 +9,10 @@
     </ion-header>
 
     <ion-content ref="ionContent" @ionScroll="onScroll">
-      <!-- Full-screen snap scroll for Trending -->
+      <!-- Trending Section - 3 items visible, 4th peeking -->
       <section class="trending-section">
         <div class="section-header px-4 pt-2 pb-3">
-          <h2 class="text-white text-lg font-bold">Trending</h2>
+          <h2 class="text-white text-lg font-bold">🔥 Trending</h2>
           <span class="text-purple-400 text-xs">Swipe up</span>
         </div>
 
@@ -27,8 +27,8 @@
             v-for="(drama, index) in trendingDramas"
             :key="drama.id"
             class="video-item"
-            :class="{ active: index === currentIndex, peek: index === currentIndex + 1 }"
-            :style="{ transform: `translateY(${(index - currentIndex) * 100}%)` }"
+            :class="{ active: index === currentIndex, peek: index === currentIndex + 1, peek2: index === currentIndex + 2 }"
+            :style="{ transform: `translateY(${(index - currentIndex) * 33.33}%)` }"
           >
             <!-- Poster -->
             <div class="video-placeholder">
@@ -125,7 +125,7 @@
       <!-- New Releases Section -->
       <section class="px-4 py-5">
         <div class="flex items-center justify-between mb-4">
-          <h2 class="text-white text-lg font-bold">New Releases</h2>
+          <h2 class="text-white text-lg font-bold">✨ New Releases</h2>
           <button class="text-purple-400 text-xs font-medium" @click="router.push('/browse')">See all</button>
         </div>
         <div class="horizontal-scroll flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
@@ -164,7 +164,7 @@
       <!-- Category Sections -->
       <section v-for="catGroups in categorySections" :key="catGroups.name" class="px-4 pb-5">
         <div class="flex items-center justify-between mb-4">
-          <h2 class="text-white text-lg font-bold">{{ catGroups.name }}</h2>
+          <h2 class="text-white text-lg font-bold">{{ getCategoryHeading(catGroups.name) }}</h2>
           <button class="text-purple-400 text-xs font-medium" @click="router.push('/browse')">See all</button>
         </div>
         <div class="horizontal-scroll flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
@@ -259,6 +259,42 @@ const isFav = (id) => dramasStore.isFavorite(id);
 
 function hasVideoSrc(drama) {
   return !!(drama.video_url || drama.trailer_url);
+}
+
+// Category emoji map
+const categoryEmoji = {
+  'Romance': '💔',
+  'Revenge': '🗡️',
+  'Action': '💥',
+  'Thriller': '🔪',
+  'Comedy': '😂',
+  'Drama': '🎭',
+  'Horror': '👻',
+  'Mystery': '🔍',
+  'Fantasy': '🪄',
+  'Sci-Fi': '🚀',
+  'Crime': '🔫',
+  'Adventure': '🗺️',
+  'Animation': '🎬',
+  'Documentary': '📽️',
+  'Family': '👨‍👩‍👧‍👦',
+  'History': '📜',
+  'Music': '🎵',
+  'Rom-Com': '💕',
+  'Suspense': '😰',
+  'War': '⚔️',
+  'Western': '🤠',
+  'Sports': '🏆',
+  'Supernatural': '👹',
+  'Teen': '🧑‍🎤',
+  'Dystopian': '💀',
+  'Psychological': '🧠',
+  'Dark': '🌑',
+};
+
+function getCategoryHeading(name) {
+  const emoji = categoryEmoji[name] || '🎬';
+  return `${emoji} ${name}`;
 }
 
 // Group featured/recent dramas by category for sections
@@ -416,18 +452,23 @@ onMounted(async () => {
 .video-item {
   position: absolute;
   inset: 0;
-  height: 100%;
+  height: 33.33%;
   width: 100%;
   transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
   will-change: transform;
 }
 
 .video-item.peek {
-  opacity: 0.4;
+  opacity: 0.25;
+}
+
+.video-item.peek2 {
+  opacity: 0.1;
 }
 
 .video-item.active {
   opacity: 1;
+  z-index: 2;
 }
 
 .video-placeholder {
