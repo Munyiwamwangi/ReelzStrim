@@ -8,7 +8,7 @@
       </ion-toolbar>
     </ion-header>
 
-    <ion-content :scroll-y="false">
+    <ion-content :scroll-y="true">
       <div
         class="video-feed"
         ref="feedContainer"

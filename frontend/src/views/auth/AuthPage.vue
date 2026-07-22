@@ -13,15 +13,22 @@
         </div>
 
         <div class="auth-form glass">
-          <div class="flex mb-8 bg-white/5 rounded-2xl p-1.5">
+          <div class="toggle-group flex mb-8 rounded-2xl p-1 relative">
+            <!-- Active pill indicator -->
+            <div
+              class="toggle-pill absolute top-1 bottom-1 w-1/2 rounded-xl transition-all duration-300"
+              :class="isLogin ? 'left-1' : 'left-[calc(50%-4px)]'"
+            />
             <button
-              :class="['flex-1 py-3.5 text-center font-bold transition-all duration-300 rounded-xl text-sm tracking-wide', isLogin ? 'gradient-bg text-white shadow-lg shadow-purple-500/30' : 'text-gray-400 hover:text-white']"
+              class="flex-1 py-3.5 text-center font-bold rounded-xl text-sm tracking-wide transition-all duration-300 relative z-10"
+              :class="isLogin ? 'text-white' : 'text-gray-400 hover:text-white'"
               @click="isLogin = true"
             >
               Sign In
             </button>
             <button
-              :class="['flex-1 py-3.5 text-center font-bold transition-all duration-300 rounded-xl text-sm tracking-wide', !isLogin ? 'gradient-bg text-white shadow-lg shadow-purple-500/30' : 'text-gray-400 hover:text-white']"
+              class="flex-1 py-3.5 text-center font-bold rounded-xl text-sm tracking-wide transition-all duration-300 relative z-10"
+              :class="!isLogin ? 'text-white' : 'text-gray-400 hover:text-white'"
               @click="isLogin = false"
             >
               Sign Up
@@ -206,5 +213,15 @@ async function handleSubmit() {
   --padding-start: 16px;
   --padding-end: 16px;
   min-height: 48px;
+}
+
+.toggle-group {
+  background: rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(10px);
+}
+
+.toggle-pill {
+  background: linear-gradient(135deg, #7c3aed, #ec4899);
+  box-shadow: 0 4px 15px rgba(124, 58, 237, 0.35);
 }
 </style>
