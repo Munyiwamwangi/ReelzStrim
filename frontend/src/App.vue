@@ -3,9 +3,9 @@
     <ion-tabs>
       <ion-router-outlet />
       <ion-tab-bar slot="bottom" class="glass" v-if="showTabs">
-        <ion-tab-button tab="feed" href="/feed">
+        <ion-tab-button tab="home" href="/feed">
           <ion-icon :icon="home" />
-          <ion-label>Feed</ion-label>
+          <ion-label>Home</ion-label>
         </ion-tab-button>
 
         <ion-tab-button tab="browse" href="/browse">

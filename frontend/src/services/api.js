@@ -64,6 +64,9 @@ export const dramasAPI = {
   featured: () => api.get('/dramas/featured'),
   categories: () => api.get('/dramas/categories'),
   search: (query) => api.get('/dramas/search', { params: { q: query } }),
+  highlyRated: () => api.get('/dramas/highly-rated'),
+  mostWatched: () => api.get('/dramas/most-watched'),
+  recommendations: () => api.get('/dramas/recommendations'),
 }
 
 // Favorites

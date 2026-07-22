@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\Drama;
 use App\Models\Category;
 use App\Models\Episode;
+use App\Models\WatchHistory;
+use App\Models\Favorite;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -121,6 +123,127 @@ class DramaController extends Controller
 
         return response()->json([
             'dramas' => $dramas,
+        ]);
+    }
+
+    /**
+     * Highly rated dramas (sorted by rating descending)
+     */
+    public function highlyRated(): JsonResponse
+    {
+        $dramas = Drama::with('category')
+            ->orderBy('rating', 'desc')
+            ->take(20)
+            ->get();
+
+        return response()->json([
+            'dramas' => $dramas,
+        ]);
+    }
+
+    /**
+     * Most watched dramas (sorted by episode count as popularity proxy)
+     */
+    public function mostWatched(): JsonResponse
+    {
+        $dramas = Drama::with('category')
+            ->orderBy('episode_count', 'desc')
+            ->take(20)
+            ->get();
+
+        return response()->json([
+            'dramas' => $dramas,
+        ]);
+    }
+
+    /**
+     * Personalized recommendations based on user's watch history and favorites.
+     * Returns dramas from categories the user has engaged with, excluding already-watched ones.
+     * Falls back to highly-rated if no history exists.
+     */
+    public function recommendations(Request $request): JsonResponse
+    {
+        $user = $request->user();
+
+        if (!$user) {
+            // Guest: return top-rated dramas
+            $dramas = Drama::with('category')
+                ->orderBy('rating', 'desc')
+                ->take(10)
+                ->get();
+
+            return response()->json([
+                'dramas' => $dramas,
+                'source' => 'top_rated',
+            ]);
+        }
+
+        // Get category IDs from watch history
+        $watchedCategoryIds = WatchHistory::where('user_id', $user->id)
+            ->with('drama')
+            ->get()
+            ->pluck('drama.category_id')
+            ->filter()
+            ->unique()
+            ->values()
+            ->toArray();
+
+        // Get category IDs from favorites
+        $favCategoryIds = Favorite::where('user_id', $user->id)
+            ->with('drama')
+            ->get()
+            ->pluck('drama.category_id')
+            ->filter()
+            ->unique()
+            ->values()
+            ->toArray();
+
+        // Merge all engaged category IDs
+        $categoryIds = array_unique(array_merge($watchedCategoryIds, $favCategoryIds));
+
+        // Get IDs of dramas already watched
+        $watchedDramaIds = WatchHistory::where('user_id', $user->id)
+            ->pluck('drama_id')
+            ->filter()
+            ->unique()
+            ->values()
+            ->toArray();
+
+        if (empty($categoryIds)) {
+            // No history: return top-rated
+            $dramas = Drama::with('category')
+                ->orderBy('rating', 'desc')
+                ->take(10)
+                ->get();
+
+            return response()->json([
+                'dramas' => $dramas,
+                'source' => 'top_rated',
+            ]);
+        }
+
+        // Find dramas in those categories, excluding already watched ones
+        $dramas = Drama::with('category')
+            ->whereIn('category_id', $categoryIds)
+            ->whereNotIn('id', $watchedDramaIds)
+            ->orderBy('rating', 'desc')
+            ->take(10)
+            ->get();
+
+        // If not enough recommendations, fill with top-rated
+        if ($dramas->count() < 5) {
+            $existingIds = $dramas->pluck('id')->toArray();
+            $fillers = Drama::with('category')
+                ->whereNotIn('id', array_merge($existingIds, $watchedDramaIds))
+                ->orderBy('rating', 'desc')
+                ->take(10 - $dramas->count())
+                ->get();
+            $dramas = $dramas->concat($fillers);
+        }
+
+        return response()->json([
+            'dramas' => $dramas,
+            'source' => 'personalized',
         ]);
     }
 }

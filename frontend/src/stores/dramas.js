@@ -64,6 +64,33 @@ export const useDramasStore = defineStore('dramas', {
       }
     },
 
+    async fetchHighlyRated() {
+      try {
+        const { data } = await dramasAPI.highlyRated()
+        this.highlyRated = data.dramas || data.data || data
+      } catch (err) {
+        this.error = err.response?.data?.message || 'Failed to fetch highly rated'
+      }
+    },
+
+    async fetchMostWatched() {
+      try {
+        const { data } = await dramasAPI.mostWatched()
+        this.mostWatched = data.dramas || data.data || data
+      } catch (err) {
+        this.error = err.response?.data?.message || 'Failed to fetch most watched'
+      }
+    },
+
+    async fetchRecommendations() {
+      try {
+        const { data } = await dramasAPI.recommendations()
+        this.recommendations = data.dramas || data.data || data
+      } catch (err) {
+        // silently fail - recommendations are optional
+      }
+    },
+
     async fetchDramas(params = {}) {
       this.loading = true
       try {

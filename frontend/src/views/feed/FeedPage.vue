@@ -9,292 +9,207 @@
     </ion-header>
 
     <ion-content :scroll-y="true">
-      <div
-        class="video-feed"
-        ref="feedContainer"
-        @touchstart="onTouchStart"
-        @touchmove="onTouchMove"
-        @touchend="onTouchEnd"
-      >
-        <div
-          v-for="(drama, index) in feedDramas"
-          :key="drama.id"
-          class="video-item"
-          :style="{ transform: `translateY(${(index - currentIndex) * 100}%)` }"
-        >
-          <!-- Video Placeholder / Poster (always visible as background) -->
-          <div class="video-placeholder">
-            <img
-              :src="drama.poster_url"
-              :alt="drama.title"
-              class="absolute inset-0 w-full h-full object-cover"
-              @error="onImgError"
-            />
-            <!-- Play button overlay on poster -->
-            <div 
-              v-if="!hasVideoSrc(drama)"
-              class="absolute inset-0 flex items-center justify-center bg-black/20 cursor-pointer"
-              @click="navigateToDrama(drama.id)"
-            >
-              <div class="w-16 h-16 rounded-full glass flex items-center justify-center">
-                <ion-icon :icon="play" class="text-white text-3xl" />
-              </div>
-            </div>
-          </div>
-
-          <!-- Video Player (on top if available) -->
-          <video
-            v-if="hasVideoSrc(drama)"
-            :ref="el => videoPlayer = index === currentIndex ? el : null"
-            class="absolute inset-0 w-full h-full object-cover"
-            :src="drama.video_url || drama.trailer_url"
-            :poster="drama.poster_url"
-            loop
-            playsinline
-            muted
-            @click="togglePlay"
-            @play="videoPlaying = true"
-            @pause="videoPlaying = false"
-          />
-
-          <!-- Gradient Overlay -->
-          <div class="video-overlay" />
-
-          <!-- Drama Info -->
-          <div class="video-info">
-            <div class="flex items-end justify-between">
-              <div class="flex-1 mr-4">
-                <h2 class="text-white text-xl font-bold mb-1">
-                  {{ drama.title }}
-                </h2>
-                <div class="flex items-center gap-3 text-sm text-gray-300 mb-2">
-                  <span class="flex items-center gap-1">
-                    <ion-icon :icon="star" class="text-yellow-400" />
-                    {{ drama.rating || "N/A" }}
-                  </span>
-                  <span>{{ drama.year || "" }}</span>
-                  <span
-                    class="px-2 py-0.5 rounded-full text-xs"
-                    :class="
-                      drama.category?.color ||
-                      'bg-purple-500/30 text-purple-300'
-                    "
-                  >
-                    {{ drama.category?.name || "Drama" }}
-                  </span>
-                </div>
-                <p class="text-gray-400 text-sm line-clamp-2">
-                  {{ drama.description }}
-                </p>
-              </div>
-
-              <!-- Side Actions -->
-              <div class="flex flex-col items-center gap-5">
-                <button
-                  class="flex flex-col items-center gap-1"
-                  @click.stop="toggleFavorite(drama.id)"
-                >
-                  <div
-                    class="w-12 h-12 rounded-full glass flex items-center justify-center"
-                  >
-                    <ion-icon
-                      :icon="isFav(drama.id) ? heart : heartOutline"
-                      :class="isFav(drama.id) ? 'text-pink-500' : 'text-white'"
-                      size="24"
-                    />
-                  </div>
-                  <span class="text-xs text-gray-400">Favorite</span>
-                </button>
-
-                <button
-                  class="flex flex-col items-center gap-1"
-                  @click.stop="shareDrama(drama)"
-                >
-                  <div
-                    class="w-12 h-12 rounded-full glass flex items-center justify-center"
-                  >
-                    <ion-icon
-                      :icon="shareOutline"
-                      class="text-white"
-                      size="24"
-                    />
-                  </div>
-                  <span class="text-xs text-gray-400">Share</span>
-                </button>
-
-                <ion-button
-                  fill="clear"
-                  @click.stop="navigateToDrama(drama.id)"
-                  class="flex flex-col items-center gap-1 p-0 h-auto min-height-0"
-                >
-                  <div
-                    class="w-12 h-12 rounded-full glass flex items-center justify-center"
-                  >
-                    <ion-icon
-                      :icon="informationCircleOutline"
-                      class="text-white"
-                      size="24"
-                    />
-                  </div>
-                  <span class="text-xs text-gray-400">Info</span>
-                </ion-button>
-              </div>
-            </div>
-
-            <!-- Episode Info -->
-            <div class="mt-3 flex items-center gap-2 text-xs text-gray-500">
-              <ion-icon :icon="playCircle" />
-              <span>{{ drama.episode_count || 0 }} episodes</span>
-              <span class="mx-1">•</span>
-              <span>{{ drama.duration || "N/A" }}</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- Loading State -->
-        <div
-          v-if="loading"
-          class="absolute inset-0 flex items-center justify-center bg-black/50 z-50"
-        >
-          <ion-spinner color="primary" />
-        </div>
+      <div v-if="loading" class="flex items-center justify-center h-64">
+        <ion-spinner color="primary" />
       </div>
+
+      <template v-if="!loading">
+        <!-- TOP: Continue Watching or Top Pick -->
+        <section class="px-4 pt-4 pb-3">
+          <div class="flex items-center justify-between mb-3">
+            <h2 class="text-white text-lg font-bold">
+              {{ continueWatching.length > 0 ? '▶️ Continue Watching' : '⭐ Top Pick For You' }}
+            </h2>
+            <span v-if="continueWatching.length > 0" class="text-purple-400 text-xs font-medium">See all</span>
+          </div>
+          <div class="relative rounded-2xl overflow-hidden h-44 cursor-pointer group" @click="navigateToDrama(topPick.id)">
+            <img :src="topPick.banner_url || topPick.poster_url" :alt="topPick.title" class="absolute inset-0 w-full h-full object-cover" @error="onImgError" />
+            <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent" />
+            <div class="absolute bottom-0 left-0 right-0 p-4">
+              <div class="flex items-center gap-2 mb-1">
+                <span class="px-2 py-0.5 rounded-full text-xs font-medium" :class="topPick.category?.color || 'bg-purple-500/30 text-purple-300'">{{ topPick.category?.name || 'Drama' }}</span>
+                <span class="flex items-center gap-1 text-xs text-yellow-400"><ion-icon :icon="star" /> {{ topPick.rating }}</span>
+              </div>
+              <h3 class="text-white text-lg font-bold">{{ topPick.title }}</h3>
+              <p class="text-gray-300 text-sm mt-1 line-clamp-1">{{ topPick.description }}</p>
+              <div class="flex items-center gap-3 mt-2">
+                <ion-button size="small" class="gradient-bg text-xs h-8" @click.stop="playTopPick">
+                  <ion-icon :icon="play" class="mr-1" />
+                  {{ continueWatching.length > 0 ? 'Continue' : 'Watch Now' }}
+                </ion-button>
+                <span class="text-gray-500 text-xs">{{ topPick.episode_count || 0 }} episodes</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- TRENDING -->
+        <section class="px-4 pb-3">
+          <div class="flex items-center justify-between mb-3">
+            <h2 class="text-white text-lg font-bold">🔥 Trending</h2>
+            <button class="text-purple-400 text-xs font-medium" @click="router.push('/browse')">See all</button>
+          </div>
+          <div class="horizontal-scroll flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
+            <div v-for="drama in trendingDramas" :key="drama.id" class="flex-shrink-0 w-32" @click="navigateToDrama(drama.id)">
+              <div class="aspect-[2/3] rounded-xl overflow-hidden relative bg-gray-800 group cursor-pointer">
+                <img :src="drama.poster_url" :alt="drama.title" class="absolute inset-0 w-full h-full object-cover" loading="lazy" @error="onImgError" />
+                <div class="absolute inset-0 bg-black/20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                  <ion-icon :icon="play" class="text-white text-2xl" />
+                </div>
+                <div class="absolute top-1.5 left-1.5">
+                  <span class="px-1.5 py-0.5 rounded text-xs font-bold bg-purple-600/90 text-white">#{{ trendingDramas.indexOf(drama) + 1 }}</span>
+                </div>
+              </div>
+              <h3 class="text-white text-xs font-medium mt-1.5 line-clamp-1">{{ drama.title }}</h3>
+              <div class="flex items-center gap-1 text-xs text-gray-500 mt-0.5">
+                <ion-icon :icon="star" class="text-yellow-400 text-[10px]" /> <span>{{ drama.rating }}</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- HIGHLY RATED -->
+        <section class="px-4 pb-3">
+          <div class="flex items-center justify-between mb-3">
+            <h2 class="text-white text-lg font-bold">🏆 Highly Rated</h2>
+            <button class="text-purple-400 text-xs font-medium" @click="router.push('/browse')">See all</button>
+          </div>
+          <div class="horizontal-scroll flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
+            <div v-for="drama in highlyRated" :key="drama.id" class="flex-shrink-0 w-32" @click="navigateToDrama(drama.id)">
+              <div class="aspect-[2/3] rounded-xl overflow-hidden relative bg-gray-800 group cursor-pointer">
+                <img :src="drama.poster_url" :alt="drama.title" class="absolute inset-0 w-full h-full object-cover" loading="lazy" @error="onImgError" />
+                <div class="absolute inset-0 bg-black/20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                  <ion-icon :icon="play" class="text-white text-2xl" />
+                </div>
+                <div class="absolute top-1.5 right-1.5">
+                  <span class="px-1.5 py-0.5 rounded text-xs font-bold bg-yellow-500/90 text-black">⭐ {{ drama.rating }}</span>
+                </div>
+              </div>
+              <h3 class="text-white text-xs font-medium mt-1.5 line-clamp-1">{{ drama.title }}</h3>
+              <p class="text-gray-500 text-[10px] mt-0.5">{{ drama.category?.name || 'Drama' }}</p>
+            </div>
+          </div>
+        </section>
+
+        <!-- MOST WATCHED -->
+        <section class="px-4 pb-3">
+          <div class="flex items-center justify-between mb-3">
+            <h2 class="text-white text-lg font-bold">👀 Most Watched</h2>
+            <button class="text-purple-400 text-xs font-medium" @click="router.push('/browse')">See all</button>
+          </div>
+          <div class="horizontal-scroll flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
+            <div v-for="drama in mostWatched" :key="drama.id" class="flex-shrink-0 w-32" @click="navigateToDrama(drama.id)">
+              <div class="aspect-[2/3] rounded-xl overflow-hidden relative bg-gray-800 group cursor-pointer">
+                <img :src="drama.poster_url" :alt="drama.title" class="absolute inset-0 w-full h-full object-cover" loading="lazy" @error="onImgError" />
+                <div class="absolute inset-0 bg-black/20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                  <ion-icon :icon="play" class="text-white text-2xl" />
+                </div>
+                <div class="absolute bottom-1.5 left-1.5 right-1.5">
+                  <div class="flex items-center gap-1 text-[10px] text-white/80 bg-black/50 rounded px-1.5 py-0.5 backdrop-blur-sm">
+                    <ion-icon :icon="playCircle" class="text-[10px]" /> <span>{{ drama.episode_count || 0 }} eps</span>
+                  </div>
+                </div>
+              </div>
+              <h3 class="text-white text-xs font-medium mt-1.5 line-clamp-1">{{ drama.title }}</h3>
+              <div class="flex items-center gap-1 text-xs text-gray-500 mt-0.5">
+                <ion-icon :icon="star" class="text-yellow-400 text-[10px]" /> <span>{{ drama.rating }}</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <div class="h-24" />
+      </template>
     </ion-content>
   </ion-page>
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted, computed, watch, nextTick } from "vue";
-import { useRouter } from "vue-router";
+import { ref, computed, onMounted } from "vue"
+import { useRouter } from "vue-router"
 import {
-  IonPage,
-  IonHeader,
-  IonToolbar,
-  IonTitle,
-  IonContent,
-  IonIcon,
-  IonSpinner,
-  IonButton,
-} from "@ionic/vue";
-import {
-  heart,
-  heartOutline,
-  shareOutline,
-  informationCircleOutline,
-  star,
-  playCircle,
-  play,
-} from "ionicons/icons";
-import { useDramasStore } from "@/stores/dramas";
-import { useAuthStore } from "@/stores/auth";
+  IonPage, IonHeader, IonToolbar, IonTitle, IonContent,
+  IonIcon, IonSpinner, IonButton,
+} from "@ionic/vue"
+import { star, playCircle, play } from "ionicons/icons"
+import { useDramasStore } from "@/stores/dramas"
+import { useAuthStore } from "@/stores/auth"
 
-const router = useRouter();
-const dramasStore = useDramasStore();
-const authStore = useAuthStore();
+const router = useRouter()
+const dramasStore = useDramasStore()
+const authStore = useAuthStore()
+const loading = ref(true)
 
-const feedContainer = ref(null);
-const videoPlayer = ref(null);
-const currentIndex = ref(0);
-const loading = ref(false);
-const touchStartY = ref(0);
-const touchDelta = ref(0);
-const isSwiping = ref(false);
-const videoPlaying = ref(false);
+const trendingDramas = computed(() => dramasStore.trending.slice(0, 10))
+const featuredDramas = computed(() => dramasStore.featured)
+const recentDramas = computed(() => dramasStore.recent)
+const watchHistory = computed(() => dramasStore.watchHistory)
+const favorites = computed(() => dramasStore.favorites)
 
-const feedDramas = computed(() => {
-  return dramasStore.trending.length > 0
-    ? dramasStore.trending
-    : dramasStore.featured;
-});
+const continueWatching = computed(() => watchHistory.value.filter(h => h.progress < 100).slice(0, 5))
 
-const isFav = (id) => dramasStore.isFavorite(id);
+const topPick = computed(() => {
+  if (continueWatching.value.length > 0) return continueWatching.value[0]
+  const all = [...featuredDramas.value, ...trendingDramas.value]
+  const seen = new Set()
+  const unique = all.filter(d => { if (seen.has(d.id)) return false; seen.add(d.id); return true })
+  unique.sort((a, b) => parseFloat(b.rating || 0) - parseFloat(a.rating || 0))
+  return unique[0] || null
+})
 
-function hasVideoSrc(drama) {
-  return !!(drama.video_url || drama.trailer_url);
-}
+const highlyRated = computed(() => dramasStore.highlyRated || [])
+const mostWatched = computed(() => dramasStore.mostWatched || [])
 
-function onImgError(e) {
-  e.target.style.display = "none";
-}
+function onImgError(e) { e.target.style.display = "none" }
+function navigateToDrama(id) { if (id) router.push(`/drama/${id}`) }
 
-function onTouchStart(e) {
-  touchStartY.value = e.touches[0].clientY;
-  isSwiping.value = true;
-}
-
-function onTouchMove(e) {
-  if (!isSwiping.value) return;
-  touchDelta.value = e.touches[0].clientY - touchStartY.value;
-}
-
-function onTouchEnd() {
-  isSwiping.value = false;
-  if (Math.abs(touchDelta.value) > 80) {
-    if (
-      touchDelta.value < 0 &&
-      currentIndex.value < feedDramas.value.length - 1
-    ) {
-      currentIndex.value++;
-    } else if (touchDelta.value > 0 && currentIndex.value > 0) {
-      currentIndex.value--;
+async function playTopPick() {
+  if (!topPick.value) return
+  const drama = topPick.value
+  // If continue watching, navigate to the last episode they were on
+  if (continueWatching.value.length > 0) {
+    const lastEntry = continueWatching.value[0]
+    if (lastEntry.episode_id) {
+      router.push(`/drama/${drama.id}/watch/${lastEntry.episode_id}`)
+      return
     }
   }
-  touchDelta.value = 0;
-}
-
-function togglePlay() {
-  if (!videoPlayer.value) return;
-  if (videoPlayer.value.paused) {
-    videoPlayer.value.play();
+  // Otherwise fetch episodes and play the first one
+  await dramasStore.fetchEpisodes(drama.id)
+  const episodes = dramasStore.episodes
+  if (episodes && episodes.length > 0) {
+    router.push(`/drama/${drama.id}/watch/${episodes[0].id}`)
   } else {
-    videoPlayer.value.pause();
+    // Fallback: go to drama detail page
+    router.push(`/drama/${drama.id}`)
   }
 }
-
-function navigateToDrama(id) {
-  router.push(`/drama/${id}`);
-}
-
-function toggleFavorite(id) {
-  if (!authStore.isAuthenticated) {
-    router.push("/auth");
-    return;
-  }
-  dramasStore.toggleFavorite(id);
-}
-
-function shareDrama(drama) {
-  if (navigator.share) {
-    navigator.share({
-      title: drama.title,
-      text: drama.description,
-      url: `${window.location.origin}/drama/${drama.id}`,
-    });
-  }
-}
-
-watch(currentIndex, async (newIdx, oldIdx) => {
-  await nextTick();
-  if (videoPlayer.value) {
-    videoPlayer.value.currentTime = 0;
-    videoPlayer.value.play().catch(() => {});
-  }
-});
 
 onMounted(async () => {
-  loading.value = true;
-  const promises = [dramasStore.fetchTrending(), dramasStore.fetchFeatured()];
-
+  loading.value = true
+  const promises = [
+    dramasStore.fetchTrending(),
+    dramasStore.fetchFeatured(),
+    dramasStore.fetchRecent(),
+    dramasStore.fetchCategories(),
+    dramasStore.fetchHighlyRated(),
+    dramasStore.fetchMostWatched(),
+  ]
   if (authStore.isAuthenticated) {
-    promises.push(dramasStore.fetchFavorites());
+    promises.push(dramasStore.fetchFavorites())
+    promises.push(dramasStore.fetchHistory())
+    promises.push(dramasStore.fetchRecommendations())
   }
-
-  await Promise.all(promises);
-  loading.value = false;
-
-  await nextTick();
-  if (videoPlayer.value) {
-    videoPlayer.value.play().catch(() => {});
-  }
-});
+  await Promise.all(promises)
+  loading.value = false
+})
 </script>
+
+<style scoped>
+.horizontal-scroll {
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
+}
+.scrollbar-hide::-webkit-scrollbar { display: none }
+.scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none }
+</style>
